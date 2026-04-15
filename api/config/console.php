@@ -1,5 +1,9 @@
 <?php
 
+use app\services\Search\Clients\{DocumentClient, IndexClient};
+use Elastic\Elasticsearch\Client;
+use Elastic\Elasticsearch\ClientBuilder;
+
 $params = require __DIR__ . '/params.php';
 $db = require __DIR__ . '/db.php';
 
@@ -14,6 +18,10 @@ $config = [
         '@tests' => '@app/tests',
     ],
     'components' => [
+        'mongodb' => [
+            'class' => \yii\mongodb\Connection::class,
+            'dsn' => 'mongodb://mongodb:27017/datamind',
+        ],
         'cache' => [
             'class' => 'yii\caching\FileCache',
         ],
@@ -28,6 +36,21 @@ $config = [
         'db' => $db,
     ],
     'params' => $params,
+    'container' => [
+        'definitions' => [
+            Client::class => static function() {
+                return ClientBuilder::create()
+                    ->setHosts(['elasticsearch:9200'])
+                    ->build();
+            },
+            IndexClient::class => static function ($container) {
+                return new IndexClient($container->get(Client::class));
+            },
+            DocumentClient::class => static function ($container) {
+                return new DocumentClient($container->get(Client::class));
+            },
+        ],
+    ],
     /*
     'controllerMap' => [
         'fixture' => [ // Fixture generation command line.
@@ -35,6 +58,7 @@ $config = [
         ],
     ],
     */
+
 ];
 
 if (YII_ENV_DEV) {

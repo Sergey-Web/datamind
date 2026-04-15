@@ -44,13 +44,14 @@ $config = [
         'db' => $db,
         'mongodb' => [
             'class' => \yii\mongodb\Connection::class,
-            'dsn' => 'mongodb://mongodb:27017/mydatabase',
+            'dsn' => 'mongodb://mongodb:27017/datamind',
         ],
         'urlManager' => [
             'enablePrettyUrl' => true,
             'showScriptName' => false,
             'rules' => [],
         ],
+        'elastic'
     ],
     'params' => $params,
 ];

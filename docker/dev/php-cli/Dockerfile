@@ -1,8 +1,7 @@
 FROM php:8.5.2-cli-alpine
 
 RUN set -eux; \
-  apk add --no-cache bash coreutils curl icu-libs \
-  ; \
+  apk add --no-cache bash coreutils curl icu-libs mongodb-tools; \
   apk add --no-cache --virtual .build-deps \
     $PHPIZE_DEPS linux-headers icu-dev \
   ; \
