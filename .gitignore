@@ -1,0 +1,74 @@
+# ========================
+# Yii2
+# ========================
+
+/vendor/
+/runtime/
+/web/assets/
+
+/frontend/runtime/
+/backend/runtime/
+/console/runtime/
+/frontend/web/assets/
+/backend/web/assets/
+
+# ========================
+# Environment / configs
+# ========================
+
+.env
+.env.*
+!.env.example
+
+# ========================
+# Composer
+# ========================
+
+composer.lock
+
+# ========================
+# Logs
+# ========================
+
+*.log
+
+# ========================
+# OS
+# ========================
+
+.DS_Store
+Thumbs.db
+
+# ========================
+# IDE: PhpStorm
+# ========================
+
+.idea/
+*.iml
+
+# ========================
+# IDE: VSCode
+# ========================
+
+.vscode/
+
+# ========================
+# Docker
+# ========================
+
+docker-compose.override.yml
+
+# ========================
+# Tests / coverage
+# ========================
+
+/tests/_output/
+/tests/_data/
+/tests/_support/_generated/
+
+# ========================
+# Misc
+# ========================
+
+*.swp
+*.swo

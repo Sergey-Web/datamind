@@ -1,0 +1,80 @@
+services:
+  nginx:
+    build: docker/dev/nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    volumes:
+      - ./api:/app
+    depends_on:
+      php-fpm:
+        condition: service_started
+
+  php-fpm:
+    build: docker/dev/php-fpm
+    restart: unless-stopped
+    volumes:
+      - ./api:/app
+      - ./docker/dev/php/conf.d/docker-php-ext-xdebug.ini:/usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini
+    environment:
+      PHP_IDE_CONFIG: "serverName=docker"
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  php-cli:
+    build: docker/dev/php-cli
+    user: "1000:1000"
+    volumes:
+      - ./api:/app
+      - ./docker/dev/php/conf.d/docker-php-ext-xdebug.ini:/usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini
+      - composer:/root/.composer/cache
+    environment:
+      PHP_IDE_CONFIG: "serverName=docker"
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  mongodb:
+    image: mongo:8.2.6
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:9.3.3
+    restart: unless-stopped
+    ports:
+      - "9200:9200"
+    environment:
+      - discovery.type=single-node
+      - ES_JAVA_OPTS=-Xms1g -Xmx1g
+      - xpack.security.enabled=false
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s -u elastic:changeme http://localhost:9200 >/dev/null || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+
+volumes:
+  mongodb_data:
+  elasticsearch_data:
+  composer:
