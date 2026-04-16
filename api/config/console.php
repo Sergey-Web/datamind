@@ -1,8 +1,10 @@
 <?php
 
 use app\services\Search\Clients\{DocumentClient, IndexClient};
-use Elastic\Elasticsearch\Client;
-use Elastic\Elasticsearch\ClientBuilder;
+use app\services\Search\ImportToElasticService;
+use app\services\Search\IndexSetup;
+use OpenSearch\Client;
+use OpenSearch\ClientBuilder;
 
 $params = require __DIR__ . '/params.php';
 $db = require __DIR__ . '/db.php';
@@ -38,9 +40,9 @@ $config = [
     'params' => $params,
     'container' => [
         'definitions' => [
-            Client::class => static function() {
+            Client::class => static function () {
                 return ClientBuilder::create()
-                    ->setHosts(['elasticsearch:9200'])
+                    ->setHosts(['http://opensearch:9200'])
                     ->build();
             },
             IndexClient::class => static function ($container) {
@@ -49,6 +51,16 @@ $config = [
             DocumentClient::class => static function ($container) {
                 return new DocumentClient($container->get(Client::class));
             },
+            IndexSetup::class => static function ($container) {
+                return new IndexSetup($container->get(IndexClient::class));
+            },
+            ImportToElasticService::class => static function ($container) {
+                return new ImportToElasticService(
+                    Yii::$app->mongodb,
+                    $container->get(DocumentClient::class)
+                );
+            },
+
         ],
     ],
     /*

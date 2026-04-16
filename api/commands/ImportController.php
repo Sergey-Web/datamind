@@ -4,12 +4,13 @@ declare(strict_types=1);
 
 namespace app\commands;
 
-use app\services\Search\DocumentItemMapper;
-use PhpParser\Comment\Doc;
+use app\mappers\DocumentItemMapper;
+use app\services\Search\ImportToElasticService;
 use Throwable;
 use Yii;
 use yii\console\Controller;
 use yii\helpers\Console;
+use yii\mongodb\Connection;
 
 class ImportController extends Controller
 {
@@ -17,9 +18,9 @@ class ImportController extends Controller
     {
         $this->stdout("Clear the collection document_item...\n", Console::FG_PURPLE);
 
-        Yii::$app->mongodb
-            ->getCollection('document_item')
-            ->remove([]);
+        /** @var Connection $mongodb */
+        $mongodb = Yii::$app->mongodb;
+        $mongodb->getCollection('document_item')->remove([]);
 
         $this->stdout("Import started...\n", Console::FG_YELLOW);
         $file = 'web/uploads/data.csv';
@@ -40,12 +41,12 @@ class ImportController extends Controller
 
             while (($row = fgetcsv($handle, 0, ',', '"', '\\')) !== false) {
                 $data = $this->combineSafe($headers, $row);
-                $mapped = DocumentItemMapper::map($data);
+                $mapped = new DocumentItemMapper()->map($data);
 
                 $batch[] = [...$mapped];
 
                 if (count($batch) >= $batchSize) {
-                    Yii::$app->mongodb->getCollection('document_item')->batchInsert($batch);
+                    $mongodb->getCollection('document_item')->batchInsert($batch);
 
                     $batch = [];
                 }
@@ -62,6 +63,15 @@ class ImportController extends Controller
         }
         
         $this->stdout('Import completed successfully - ' . filesize($file) . " bytes\n", Console::FG_GREEN);
+    }
+
+    public function actionSyncMongoToElastic(string $fields): void
+    {
+        $fields = array_map('trim', explode(',', $fields));
+
+        /** @var ImportToElasticService $service */
+        $service = Yii::$container->get(ImportToElasticService::class);
+        $this->stdout('Imported ' .$service->import($fields) . ' records.' . "\n");
     }
 
     private function combineSafe(array $headers, array $row): array

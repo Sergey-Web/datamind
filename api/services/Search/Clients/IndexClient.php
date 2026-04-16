@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace app\services\Search\Clients;
 
-use Elastic\Elasticsearch\Client;
+use OpenSearch\Client;
 
 readonly final class IndexClient
 {
@@ -25,6 +25,6 @@ readonly final class IndexClient
 
     public function exists(string $index): bool
     {
-        return $this->client->indices()->exists(['index' => $index])->asBool();
+        return $this->client->indices()->exists(['index' => $index]);
     }
 }

@@ -2,12 +2,14 @@
 
 declare(strict_types=1);
 
-namespace App\Services\Search;
+namespace app\services\Search;
 
 use app\services\Search\Clients\IndexClient;
 
-final class IndexSetup
+readonly final class IndexSetup
 {
+    public const string INDEX_NAME = 'datamind_document_items';
+
     public function __construct(
         private IndexClient $indexClient
     ) {
@@ -15,21 +17,20 @@ final class IndexSetup
 
     public function recreate(int $shards = 1): void
     {
-        $index = 'datamind_document_items';
-
-        if ($this->indexClient->exists($index)) {
-            $this->indexClient->delete($index);
+        if ($this->indexClient->exists(self::INDEX_NAME)) {
+            $this->indexClient->delete(self::INDEX_NAME);
         }
 
-        $this->indexClient->create($index, [
+        $this->indexClient->create(self::INDEX_NAME, [
             'settings' => $this->getSettings($shards),
             'mappings' => $this->getMappings(),
         ]);
     }
 
-    private function getMappings(): array
+    private function getSettings(int $shards): array 
     {
         return [
+            'number_of_shards' => $shards,
             'analysis' => [
                 'analyzer' => [
                     'default_search_index' => [
@@ -47,7 +48,7 @@ final class IndexSetup
         ];
     }
 
-    private function getSettings(): array 
+    private function getMappings(): array
     {
         return [
             'dynamic' => false,
@@ -70,7 +71,7 @@ final class IndexSetup
                 ],
                 'invoice_date' => [
                     'type' => 'date',
-                    'format' => 'M/d/yyyy',
+                    'format' => 'strict_date_optional_time||epoch_millis',
                 ],
                 'fact_address' => [
                     'type' => 'text',
@@ -113,7 +114,7 @@ final class IndexSetup
                 ],
                 'license_expiration_date' => [
                     'type' => 'date',
-                    'format' => 'M/d/yyyy',
+                    'format' => 'strict_date_optional_time||epoch_millis',
                 ],
                 'product_code' => [
                     'type' => 'integer',
